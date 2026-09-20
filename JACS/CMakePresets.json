@@ -1,0 +1,76 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 30,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "common",
+            "hidden": true,
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+                "CMAKE_C_COMPILER": "/usr/bin/clang",
+                "CMAKE_INSTALL_PREFIX": "/usr/local",
+                "CMAKE_CXX_STANDARD": "23",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_CXX_SCAN_FOR_MODULES": "ON",
+                "CMAKE_CXX_FLAGS": "-stdlib=libc++",
+                "CMAKE_EXE_LINKER_FLAGS": "-stdlib=libc++ -fuse-ld=lld -lc++ -lc++abi",
+                "CMAKE_COLOR_DIAGNOSTICS": "ON"
+            }
+        },
+        {
+            "name": "debug",
+            "inherits": "common",
+            "binaryDir": "${sourceDir}/build/debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_FLAGS_DEBUG": "-g -O0 -Wall -Wextra -fsanitize=address -fsanitize=undefined"
+            }
+        },
+        {
+            "name": "release",
+            "inherits": "common",
+            "binaryDir": "${sourceDir}/build/release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_FLAGS_RELEASE": "-O2 -Wall -Wextra"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "debug",
+            "configurePreset": "debug",
+            "targets": [
+                "jacs"
+            ]
+        },
+        {
+            "name": "unit_tests",
+            "configurePreset": "debug",
+            "targets": [
+                "unit_tests"
+            ]
+        },
+        {
+            "name": "release",
+            "configurePreset": "release",
+            "targets": [
+                "jacs"
+            ]
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "unit_tests",
+            "configurePreset": "debug",
+            "output": {
+                "outputOnFailure": true
+            }
+        }
+    ]
+}

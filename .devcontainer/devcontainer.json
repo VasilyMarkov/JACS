@@ -1,0 +1,51 @@
+{
+    "name": "Base Dev Container",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "workspaceMount": "source=${localWorkspaceFolder},target=/home/user/projects,type=bind,consistency=cached",
+    "workspaceFolder": "/home/user/projects",
+    "runArgs": [
+        "--cap-drop=ALL",
+        "--cap-add=SYS_PTRACE",
+        "--security-opt=seccomp=unconfined"
+    ],
+    "containerEnv": {
+        "CC": "clang",
+        "CXX": "clang++"
+    },
+    "remoteUser": "user",
+    // Removed "mounts" — workspaceFolder mount is handled automatically
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-vscode.cmake-tools",
+                "mhutchie.git-graph",
+                "llvm-vs-code-extensions.vscode-clangd"
+            ],
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "cmake.configureOnOpen": true,
+                "cmake.generator": "Ninja",
+                "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+                "C_Cpp.intelliSenseEngine": "disabled",
+                "editor.inlayHints.enabled": "off",
+                "clangd.path": "/usr/bin/clangd",
+                "clangd.arguments": [
+                    "-log=verbose",
+                    "-pretty",
+                    "--compile-commands-dir=${workspaceFolder}/build/debug",
+                    "--all-scopes-completion",
+                    "--completion-style=detailed",
+                    "--background-index",
+                    "--clang-tidy",
+                    "--header-insertion=never"
+                ]
+            }
+        }
+    },
+    "postCreateCommand": "git config --global --add safe.directory /home/user/projects && git config --global core.autocrlf false && echo 'Sandbox ready'",
+    "shutdownAction": "stopContainer"
+}
