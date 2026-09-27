@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Vasily Markov
+
 cmake_minimum_required(VERSION 3.30)
 project(JACS)
 
