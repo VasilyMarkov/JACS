@@ -133,6 +133,14 @@ public:
         std::cout << z_vector_ << std::endl;
     }
 
+    VectorXd solve() const {
+        Eigen::FullPivLU<MatrixXd> lu(a_matrix_);
+        if (!lu.isInvertible()) {
+            throw std::runtime_error("singular MNA matrix: floating node or voltage-source loop");
+        }
+        return lu.solve(z_vector_);
+    }
+
 private:
     Eigen::Index nodeIndex(node_id id) const {
         return static_cast<Eigen::Index>(std::to_underlying(id)) - 1; // ground -> -1
@@ -151,11 +159,16 @@ void stamp(const Resistor& resistor, MNASystem& mna) {
 }
 
 int main() {
-    NetList netlist;
-    netlist.add(Resistor{.a = node_id(1), .b = node_id(2), .r = 1000});
-    netlist.add(Resistor{.a = node_id(2), .b = node_id(3), .r = 500});
-    netlist.add(Resistor{.a = node_id(3), .b = node_id(0), .r = 100});
-    netlist.add(Vsource{.a = node_id(0), .b = node_id(1), .v = 5, .k = branch_id(0)});
-    MNASystem mna(netlist);
-    mna.stamp();
+    try {
+        NetList netlist;
+        netlist.add(Resistor{.a = node_id(1), .b = node_id(2), .r = 1000});
+        netlist.add(Resistor{.a = node_id(2), .b = node_id(3), .r = 500});
+        netlist.add(Resistor{.a = node_id(3), .b = node_id(0), .r = 100});
+        netlist.add(Vsource{.a = node_id(0), .b = node_id(1), .v = 5, .k = branch_id(0)});
+        MNASystem mna(netlist);
+        mna.stamp();
+        auto answer = mna.solve();
+        std::cout << answer << std::endl;
+    } catch (...) {
+    }
 }
