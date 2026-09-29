@@ -74,7 +74,10 @@ From the `JACS` directory:
 ./scripts/build.sh -cb    # clean build
 ./scripts/run.sh          # run the release binary
 ./scripts/clang-format.sh # format sources (add -c to only check)
+./scripts/clang-tidy.sh   # static analysis (add -d for the debug preset, -f to apply fixes)
 ```
+
+`clang-tidy.sh` uses the compile database of the chosen preset, configuring it first if needed, and the checks in [.clang-tidy](.clang-tidy).
 
 ## License
 

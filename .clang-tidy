@@ -1,0 +1,51 @@
+# Curated, moderate check set: real-bug-finding groups (bugprone, the static
+# analyzer, performance, portability) plus a hand-picked list of readability
+# and modernize checks. Full readability-*/modernize-*/cppcoreguidelines-*
+# groups were deliberately left out — they mostly flag this project's
+# existing style (no trailing return types, short loop/parameter names,
+# member init style) rather than real issues.
+#
+# readability-redundant-declaration is intentionally not enabled: it false
+# positives on the implicit global module fragment's redeclaration of
+# ::operator new/delete for every C++20 module interface unit here.
+#
+# bugprone-reserved-identifier is intentionally excluded: clang-tidy-20
+# reliably segfaults running it (RenamerClangTidyCheck) against
+# src/modules/ast.cppm, which would otherwise abort analysis of that file
+# entirely.
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-reserved-identifier,
+  clang-analyzer-*,
+  performance-*,
+  portability-*,
+  modernize-use-nullptr,
+  modernize-use-override,
+  modernize-use-emplace,
+  modernize-use-default-member-init,
+  modernize-use-equals-default,
+  modernize-use-equals-delete,
+  modernize-loop-convert,
+  modernize-redundant-void-arg,
+  modernize-use-bool-literals,
+  modernize-use-using,
+  modernize-make-unique,
+  modernize-make-shared,
+  readability-braces-around-statements,
+  readability-container-size-empty,
+  readability-delete-null-pointer,
+  readability-else-after-return,
+  readability-inconsistent-declaration-parameter-name,
+  readability-misleading-indentation,
+  readability-non-const-parameter,
+  readability-redundant-control-flow,
+  readability-redundant-member-init,
+  readability-redundant-string-cstr,
+  readability-redundant-string-init,
+  readability-simplify-boolean-expr,
+  readability-static-accessed-through-instance,
+  readability-uniqueptr-delete-release
+
+WarningsAsErrors: ''
+FormatStyle: file
