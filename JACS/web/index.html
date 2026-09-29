@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="color-scheme" content="dark" />
+        <title>JACS Circuit Simulator</title>
+        <link rel="stylesheet" href="/src/styles.css" />
+    </head>
+    <body>
+        <header class="topbar">
+            <h1 class="brand">JACS</h1>
+
+            <div class="group" role="toolbar" aria-label="Tools">
+                <button type="button" data-tool="select" title="Select and move (1)">Select <kbd>1</kbd></button>
+                <button type="button" data-tool="wire" title="Draw wires (2). Double-click or Esc to stop.">Wire <kbd>2</kbd></button>
+                <button type="button" data-tool="resistor" title="Place a resistor (3)">Resistor <kbd>3</kbd></button>
+                <button type="button" data-tool="vsource" title="Place a voltage source (4)">Source <kbd>4</kbd></button>
+                <button type="button" data-tool="ground" title="Place a ground (5)">Ground <kbd>5</kbd></button>
+            </div>
+
+            <div class="group" role="toolbar" aria-label="Edit">
+                <button type="button" data-action="undo" title="Undo (Ctrl+Z)">Undo</button>
+                <button type="button" data-action="redo" title="Redo (Ctrl+Shift+Z)">Redo</button>
+                <button type="button" data-action="fit" title="Fit the schematic in view">Fit</button>
+            </div>
+
+            <div class="group" role="toolbar" aria-label="Document">
+                <button type="button" data-action="example">Example</button>
+                <button type="button" data-action="clear">Clear</button>
+                <button type="button" data-action="export">Export</button>
+                <button type="button" data-action="import">Import</button>
+            </div>
+
+            <span id="engine-status" class="engine" role="status">Loading simulator…</span>
+        </header>
+
+        <main class="workspace">
+            <section class="editor-pane" aria-label="Schematic editor">
+                <canvas id="schematic" aria-label="Schematic canvas"></canvas>
+                <p class="help">Wheel zooms · middle-drag or Space-drag pans · R rotates · double-click ends a wire</p>
+                <p id="status" class="status" data-kind="busy" role="status"></p>
+            </section>
+
+            <aside class="side">
+                <section id="inspector" class="panel inspector" aria-label="Inspector"></section>
+                <section id="results" class="panel results" aria-label="Results"></section>
+            </aside>
+        </main>
+
+        <input id="import-file" type="file" accept="application/json,.json" hidden />
+        <script type="module" src="/src/main.ts"></script>
+    </body>
+</html>

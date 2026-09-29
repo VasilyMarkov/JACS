@@ -17,18 +17,33 @@ while [ $# -gt 0 ]; do
         -d|--debug)
             preset=debug
             ;;
+        -w|--wasm)
+            preset=wasm
+            ;;
         -j|--jobs)
             shift
             jobs="$1"
             ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 [-cb|--clean_build] [-d|--debug] [-j|--jobs N]"
+            echo "Usage: $0 [-cb|--clean_build] [-d|--debug] [-w|--wasm] [-j|--jobs N]"
             exit 1
             ;;
     esac
     shift
 done
+
+# The wasm preset needs the Emscripten environment. Use the active one, or fall
+# back to an emsdk checkout in $EMSDK_HOME (default ~/emsdk).
+if [ "$preset" = wasm ] && [ -z "${EMSDK:-}" ]; then
+    emsdk_home="${EMSDK_HOME:-$HOME/emsdk}"
+    if [ ! -f "$emsdk_home/emsdk_env.sh" ]; then
+        echo "Emscripten SDK not found in $emsdk_home. Install it or set EMSDK_HOME."
+        exit 1
+    fi
+    # shellcheck disable=SC1091
+    source "$emsdk_home/emsdk_env.sh" > /dev/null
+fi
 
 if $clean_build; then
     rm -rf "build/$preset"

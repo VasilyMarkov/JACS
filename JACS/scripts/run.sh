@@ -10,7 +10,11 @@ BUILD_DIR="$SCRIPT_DIR/../build"
 
 preset=release
 
-args=()
+# With no arguments, solve the bundled example instead of waiting for a request on stdin.
+args=("$@")
+if [ ${#args[@]} -eq 0 ]; then
+    args=("$SCRIPT_DIR/../examples/divider.json")
+fi
 case_file=""
 
 "$BUILD_DIR/$preset/jacs" "${args[@]}"

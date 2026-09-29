@@ -78,6 +78,12 @@ fi
 
 status=0
 for file in "${files[@]}"; do
+    # Some sources belong to one target only (bindings.cpp is built just for wasm), so a file the
+    # chosen preset does not compile has no compile command to analyze it with.
+    if ! grep -qF "\"$PWD/$file\"" "$BUILD_DIR/compile_commands.json"; then
+        echo "clang-tidy: skipping $file (not built by the $preset preset)"
+        continue
+    fi
     echo "clang-tidy: $file"
     "$CLANG_TIDY" "${args[@]}" "$file" || status=1
 done
