@@ -1,65 +1,149 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Vasily Markov
 
-#include <print>
-#include <vector>
-#include <optional>
-#include <unordered_set>
-#include <unordered_map>
-#include <memory>
-#include <iostream>
 #include <Eigen/Dense>
- 
+#include <algorithm>
+#include <iostream>
+#include <memory>
+#include <optional>
+#include <print>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
 using Eigen::MatrixXd;
+using Eigen::VectorXd;
 
-enum class node_id: uint32_t {};
-enum class branch_id: uint32_t {};
+enum class node_id : size_t {
+};
+enum class branch_id : size_t {
+};
 
-enum class matrix_type: uint8_t{ G, C, B, D };
+enum class matrix_type : uint8_t {
+    G,
+    C,
+    B,
+    D
+};
 
 constexpr node_id k_ground{};
 
-struct Resistor  { node_id a, b; double r; };
-struct Vsource   { node_id a, b; double v; branch_id k; };
-struct Isource   { node_id a, b; double i; branch_id k; };
+struct Resistor {
+    node_id a, b;
+    double r;
+};
+struct Vsource {
+    node_id a, b;
+    double v;
+    branch_id k;
+};
+struct Isource {
+    node_id a, b;
+    double i;
+    branch_id k;
+};
+
+bool isGround(node_id id) {
+    return id == k_ground;
+}
 
 class NetList {
 public:
-    node_id node(std::string_view name) {}
-
     void add(Resistor resistor) {
-        std::get<std::vector<Resistor>>(g_elements_).push_back(std::move(resistor));
+        trackNodes(resistor.a, resistor.b);
+        resistors_.push_back(std::move(resistor));
     }
 
-    size_t getGMartixSize() const {
-        size_t g_size{};
-        std::apply([&](const auto& vector) { g_size += vector.size(); }, g_elements_);
-        return g_size;
+    void add(Vsource v_source) {
+        trackNodes(v_source.a, v_source.b);
+        v_sources_.push_back(std::move(v_source));
     }
+
+    const std::vector<Resistor>& getResistors() const { return resistors_; }
+    const std::vector<Vsource>& getVoltageSources() const { return v_sources_; }
+
+    size_t getNumNodes() const { return num_nodes_; }
 
 private:
-    std::tuple<std::vector<Resistor>> g_elements_;
+    void trackNodes(node_id a, node_id b) {
+        num_nodes_ = std::max({std::to_underlying(a), std::to_underlying(b), num_nodes_});
+    }
+
+    size_t num_nodes_{};
+    std::vector<Resistor> resistors_;
     std::vector<Vsource> v_sources_;
 };
 
-
 class MNASystem {
 public:
-    MNASystem(const NetList& netlist): netlist_(netlist) {
-        const size_t g_size = netlist.getGMartixSize();
-        stamp_matrix_.resize(g_size, g_size);
-        std::cout << stamp_matrix_ << std::endl;
+    MNASystem(const NetList& netlist) : num_nodes_(netlist.getNumNodes()), netlist_(netlist) {
+        const size_t n_branches = netlist.getVoltageSources().size();
+        const size_t size = num_nodes_ + n_branches;
+        a_matrix_.setZero(size, size);
+        z_vector_.setZero(size);
     }
 
-    void addAdmittance(node_id a, node_id b, double y) {}
+    void addAdmittance(node_id a, node_id b, double g) {
+        auto a_idx = nodeIndex(a);
+        auto b_idx = nodeIndex(b);
+        if (!isGround(a)) {
+            a_matrix_(a_idx, a_idx) += g;
+        }
+        if (!isGround(b)) {
+            a_matrix_(b_idx, b_idx) += g;
+        }
+        if (!isGround(a) && !isGround(b)) {
+            a_matrix_(a_idx, b_idx) -= g;
+            a_matrix_(b_idx, a_idx) -= g;
+        }
+    }
+
+    void addVoltage(node_id a, node_id b, branch_id k, double v) {
+        auto a_idx = nodeIndex(a);
+        auto b_idx = nodeIndex(b);
+        auto k_idx = branchIndex(k);
+        if (!isGround(a)) {
+            a_matrix_(a_idx, k_idx) = 1;
+            a_matrix_(k_idx, a_idx) = 1;
+        }
+        if (!isGround(b)) {
+            a_matrix_(b_idx, k_idx) = -1;
+            a_matrix_(k_idx, b_idx) = -1;
+        }
+
+        z_vector_(k_idx) = v;
+    }
 
     void stamp(const Resistor& resistor) {
         addAdmittance(resistor.a, resistor.b, 1.0 / resistor.r);
     }
 
+    void stamp(const Vsource& v_source) {
+        addVoltage(v_source.a, v_source.b, v_source.k, v_source.v);
+    }
+
+    void stamp() {
+        for (const auto& resistor : netlist_.getResistors()) {
+            stamp(resistor);
+        }
+        for (const auto& v_source : netlist_.getVoltageSources()) {
+            stamp(v_source);
+        }
+        std::cout << a_matrix_ << std::endl;
+        std::cout << z_vector_ << std::endl;
+    }
+
 private:
+    Eigen::Index nodeIndex(node_id id) const {
+        return static_cast<Eigen::Index>(std::to_underlying(id)) - 1; // ground -> -1
+    }
+    Eigen::Index branchIndex(branch_id id) const {
+        return num_nodes_ + static_cast<Eigen::Index>(std::to_underlying(id));
+    }
+    size_t num_nodes_{};
     const NetList& netlist_;
-    MatrixXd stamp_matrix_;
+    MatrixXd a_matrix_;
+    VectorXd z_vector_;
 };
 
 void stamp(const Resistor& resistor, MNASystem& mna) {
@@ -68,8 +152,10 @@ void stamp(const Resistor& resistor, MNASystem& mna) {
 
 int main() {
     NetList netlist;
-    Resistor res = {.a = node_id(1), .b = node_id(2), .r = 1000};
-    netlist.add(std::move(res));
+    netlist.add(Resistor{.a = node_id(1), .b = node_id(2), .r = 1000});
     netlist.add(Resistor{.a = node_id(2), .b = node_id(3), .r = 500});
+    netlist.add(Resistor{.a = node_id(3), .b = node_id(0), .r = 100});
+    netlist.add(Vsource{.a = node_id(0), .b = node_id(1), .v = 5, .k = branch_id(0)});
     MNASystem mna(netlist);
+    mna.stamp();
 }
