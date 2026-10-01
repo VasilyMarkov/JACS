@@ -95,6 +95,23 @@ RUN groupadd --gid ${USER_GID} ${USERNAME} \
     && useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} \
     && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME}
 
+ARG NODE_MAJOR=22
+ARG EMSDK_VERSION=latest
+
+# ===== Install Node.js (NodeSource) =====
+RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/* \
+    && node --version && npm --version
+
+# ===== Install Emscripten SDK =====
+# Owned by the user: Emscripten writes its cache into the SDK on first use.
+RUN git clone --depth 1 https://github.com/emscripten-core/emsdk.git /opt/emsdk \
+    && /opt/emsdk/emsdk install ${EMSDK_VERSION} \
+    && /opt/emsdk/emsdk activate ${EMSDK_VERSION} \
+    && chown -R ${USERNAME}:${USERNAME} /opt/emsdk \
+    && echo 'source /opt/emsdk/emsdk_env.sh > /dev/null 2>&1' >> /etc/bash.bashrc
+
 COPY .devcontainer/requirements.txt /tmp/requirements.txt
 
 RUN pip3 install --no-cache-dir -r /tmp/requirements.txt

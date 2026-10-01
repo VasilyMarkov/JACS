@@ -82,12 +82,12 @@ From the `JACS` directory:
 
 ### Web UI
 
-Additional requirements: the [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) and Node.js 20.19+ or 22.12+ (the SDK ships a suitable Node, which `emsdk_env.sh` puts on your PATH). The devcontainer does not include them yet. Dependencies are downloaded on first use, which needs network access.
+Additional requirements: the [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) and Node.js 20.19+ or 22.12+. The [.devcontainer](.devcontainer) image has both: Node.js 22 from NodeSource, and the SDK in `/opt/emsdk`, which every interactive shell activates. In the devcontainer, skip the setup below and start at `./scripts/build.sh -w`. Dependencies are downloaded on first use, which needs network access.
 
 ```sh
 git clone https://github.com/emscripten-core/emsdk.git ~/emsdk
 ~/emsdk/emsdk install latest && ~/emsdk/emsdk activate latest
-source ~/emsdk/emsdk_env.sh   # puts emcc, node and npm on PATH; repeat in every new shell
+source ~/emsdk/emsdk_env.sh   # puts emcc on PATH (and the SDK's Node); repeat in every new shell
 
 ./scripts/build.sh -w     # compile the simulator to WebAssembly (uses $EMSDK, else ~/emsdk or $EMSDK_HOME)
 cd web
